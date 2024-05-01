@@ -1,59 +1,48 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.ByteBuffersDirectory;
-
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.NIOFSDirectory;
 public class SearchEngine {
 
-   public Document  getDocumentsFromFile(String filePath) throws IOException{
-        try(BufferdReader br = new BufferedReader(new FileReader(filePath))){
+    // Step 1: Create a method to get Lucene documents from a CSV file.
+    private Document getDocumentFromCSV(File file) throws IOException {
+        Document document = new Document();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
-            if((line - br.readLine())!= null){
-                String[] headers = line.split(",");
-                if(headers.length>=4){
-                    String sourceId = "";
-                    String year = "";
-                    String title = "";
-                    String fullText = "";
+            while ((line = br.readLine()) != null) {
+                String[] fields = line.split(","); // Assuming CSV format
+                if (fields.length < 5) continue; // Skipping incomplete lines
 
-                    while((line = br.readLine())!=null){
-                        String[] fields = line.split(",");
-                        if (fields.length >= 4) {
-                            sourceId = fields[0];
-                            year = fields[1];
-                            title = fields[2];
-                            fullText = fields[3];
+                // Step 2: Create fields for paper data
+                String sourceId = fields[0];
+                String year = fields[1];
+                String title = fields[2];
+                String abstractText = fields[3];
+                String fullText = fields[4];
 
-                            Document doc = new Document();
-                            doc.add(new StringField("source_id", sourceId, Field.Store.YES));
-                            doc.add(new StringField("year", year, Field.Store.YES));
-                            doc.add(new TextField("title", title, Field.Store.YES));
-                            doc.add(new TextField("full_text", fullText, Field.Store.YES));
-
-                            return doc;
-                    }
-                }
+                // Step 3: Add fields to document
+                document.add(new Field("source_id", sourceId, Field.Store.YES, Field.Index.NOT_ANALYZED));
+                document.add(new Field("year", year, Field.Store.YES, Field.Index.NOT_ANALYZED));
+                document.add(new Field("title", title, Field.Store.YES, Field.Index.ANALYZED)); // Example of an analyzed field
+                document.add(new Field("abstract", abstractText, Field.Store.YES, Field.Index.ANALYZED)); // Example of an analyzed field
+                document.add(new Field("full_text", fullText, Field.Store.YES, Field.Index.NO)); // Example of a non-analyzed field
             }
         }
 
-   } catch (IOException e){
-            e.printStackTrace();
-        }
-        retrun null;
+        return document;
+    }
+
+    // Step 4: Add the newly-created fields to the document object and return it to the caller method.
+    // This method can be used to build Lucene documents for both papers and authors.
 }

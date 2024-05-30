@@ -35,4 +35,6 @@ This project is a search engine application built using Apache Lucene. It allows
 - **full_text**: Complete text of the paper.
 
 ---
-
+## Developers:
+- Konstantinos Papantoniou-Chatzigiosis
+- Vasileios Somakos
